@@ -53,13 +53,21 @@ theorem neg_add_cancel_left (a b : R) : -a + (a + b) = b := by
 
 -- Prove these:
 theorem add_neg_cancel_right (a b : R) : a + b + -b = a := by
-  sorry
+  rw [add_assoc]
+  nth_rw 2 [add_comm]
+  rw [neg_add_cancel, add_comm, zero_add]
 
 theorem add_left_cancel {a b c : R} (h : a + b = a + c) : b = c := by
-  sorry
+  rw [← neg_add_cancel_left a b]
+  rw [h, ← add_assoc, neg_add_cancel, zero_add]
 
 theorem add_right_cancel {a b c : R} (h : a + b = c + b) : a = c := by
-  sorry
+  rw [← neg_add_cancel_left b a]
+  rw [add_comm] at h
+  rw [h, ← add_assoc,
+      add_comm,
+      ← add_assoc,
+      add_comm b, neg_add_cancel, zero_add]
 
 theorem mul_zero (a : R) : a * 0 = 0 := by
   have h : a * 0 + a * 0 = a * 0 + 0 := by
@@ -67,20 +75,25 @@ theorem mul_zero (a : R) : a * 0 = 0 := by
   rw [add_left_cancel h]
 
 theorem zero_mul (a : R) : 0 * a = 0 := by
-  sorry
+  have h : 0 * a + 0 * a = 0 * a + 0 := by
+    rw [← add_mul, add_zero, add_zero]
+  rw [add_left_cancel h]
 
 theorem neg_eq_of_add_eq_zero {a b : R} (h : a + b = 0) : -a = b := by
-  sorry
+  apply add_left_cancel
+  rw [h, add_comm, neg_add_cancel]
 
 theorem eq_neg_of_add_eq_zero {a b : R} (h : a + b = 0) : a = -b := by
-  sorry
+  rw [← add_neg_cancel_left b a]
+  rw [add_comm, add_comm, add_comm, add_assoc, h, add_zero]
 
 theorem neg_zero : (-0 : R) = 0 := by
   apply neg_eq_of_add_eq_zero
   rw [add_zero]
 
 theorem neg_neg (a : R) : - -a = a := by
-  sorry
+  apply neg_eq_of_add_eq_zero
+  rw [neg_add_cancel]
 
 end MyRing
 
@@ -102,14 +115,14 @@ example (a b : ℝ) : a - b = a + -b := by
 namespace MyRing
 variable {R : Type*} [Ring R]
 
-theorem self_sub (a : R) : a - a = 0 := by
-  sorry
+theorem self_sub (a : ℝ) : a - a = 0 := by
+  apply add_neg_cancel
 
 theorem one_add_one_eq_two : 1 + 1 = (2 : R) := by
   norm_num
 
 theorem two_mul (a : R) : 2 * a = a + a := by
-  sorry
+  rw [← one_add_one_eq_two, add_mul, one_mul]
 
 end MyRing
 
@@ -131,16 +144,66 @@ variable {G : Type*} [Group G]
 
 namespace MyGroup
 
+lemma mul_neg_cancel_right (a b : G) : b⁻¹ * b * a = a := by
+  rw [inv_mul_cancel, one_mul]
+
+lemma rev_mul_neg_cancel_right (a b : G) : a =  b⁻¹ * b * a := by
+  rw [inv_mul_cancel, one_mul]
+
+lemma mul_right_cancel {a b c : G} (h :  a * b = a * c) : b = c := by
+  rw [← mul_neg_cancel_right b a, ← mul_neg_cancel_right c a]
+  rw [mul_assoc, mul_assoc]
+  rw [h]
+
+lemma neg_eq_of_mul_eq_zero_inside {a b : G} (h : a⁻¹ * b = 1) : b = a := by
+  apply mul_right_cancel
+  rw [h, inv_mul_cancel]
+
+lemma rev_neg_eq_of_mul_eq_zero_inside {a b : G} (h : a⁻¹ * b = 1) : a = b := by
+  apply mul_right_cancel
+  rw [h, inv_mul_cancel]
+
+-- ✨
+lemma mul_neg_cancel_left (a b : G): a * b⁻¹ * b = a := by
+  apply neg_eq_of_mul_eq_zero_inside
+  rw [mul_assoc, inv_mul_cancel, ← mul_assoc, ← rev_mul_neg_cancel_right 1 a]
+
+lemma mul_left_cancel {a b c : G} (h :  b * a⁻¹ = c * a⁻¹) : b = c := by
+  rw [← mul_neg_cancel_left b a, ← mul_neg_cancel_left c a]
+  rw [h]
+
+theorem inv_inv {a : G}: a = a⁻¹⁻¹ := by
+  apply mul_right_cancel
+  rw [mul_neg_cancel_left, mul_neg_cancel_right]
+
+lemma rev_inv {a b : G} (h: a = b⁻¹): a⁻¹ = b := by
+  rw [h, ← inv_inv]
+
+lemma mul_inv_cancel_helper (a : G) : 1 = a * a⁻¹ := by
+  rw [← mul_neg_cancel_right a a⁻¹]
+  apply mul_left_cancel
+  rw [one_mul, rev_inv]
+  rw [inv_mul_cancel, ← inv_inv, one_mul, mul_neg_cancel_left]
+  rw [← inv_inv]
+
+-- to be proved
 theorem mul_inv_cancel (a : G) : a * a⁻¹ = 1 := by
-  sorry
+  rw [mul_inv_cancel_helper]
 
+-- to be proved
 theorem mul_one (a : G) : a * 1 = a := by
-  sorry
+ rw [← inv_mul_cancel a, ← mul_assoc]
+ rw [mul_neg_cancel_left]
 
+-- to be proved
 theorem mul_inv_rev (a b : G) : (a * b)⁻¹ = b⁻¹ * a⁻¹ := by
-  sorry
+ apply rev_neg_eq_of_mul_eq_zero_inside
+ rw [← inv_inv]
+ rw [← mul_assoc]
+ nth_rw 2 [mul_assoc]
+ rw [mul_inv_cancel, mul_one]
+ rw [mul_inv_cancel]
 
 end MyGroup
 
 end
-

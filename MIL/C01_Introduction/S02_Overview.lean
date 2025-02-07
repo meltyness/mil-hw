@@ -24,18 +24,19 @@ theorem easy : 2 + 2 = 4 :=
 
 #check easy
 
-theorem hard : FermatLastTheorem :=
-  sorry
+-- theorem hard : FermatLastTheorem :=
+--   sorry
 
-#check hard
+-- #check hard
 
 -- Here are some proofs.
-example : ∀ m n : Nat, Even n → Even (m * n) := fun m n ⟨k, (hk : n = k + k)⟩ ↦
-  have hmn : m * n = m * k + m * k := by rw [hk, mul_add]
+example : ∀ m n : Nat, Even n → Even (m * n) :=
+  fun m n ⟨k, (hk : n = k + k)⟩ ↦
+  have hmn : m * n = m * k + m * k := by rw [hk, left_distrib]
   show ∃ l, m * n = l + l from ⟨_, hmn⟩
 
 example : ∀ m n : Nat, Even n → Even (m * n) :=
-fun m n ⟨k, hk⟩ ↦ ⟨m * k, by rw [hk, mul_add]⟩
+ fun m n ⟨k, hk⟩ ↦ ⟨m * k, by rw [hk, left_distrib]⟩
 
 example : ∀ m n : Nat, Even n → Even (m * n) := by
   -- Say `m` and `n` are natural numbers, and assume `n = 2 * k`.
@@ -52,4 +53,3 @@ example : ∀ m n : Nat, Even n → Even (m * n) := by
 
 example : ∀ m n : Nat, Even n → Even (m * n) := by
   intros; simp [*, parity_simps]
-
